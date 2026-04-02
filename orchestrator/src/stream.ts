@@ -12,11 +12,13 @@ export function setupStreaming(wss: WebSocketServer) {
     const interval = setInterval(() => {
       while (lastIndex < job.logs.length) {
         const line = job.logs[lastIndex];
-        if (line) ws.send(line);
+        if (line) {
+          ws.send(JSON.stringify({ jobId: id, log: line }));
+        }
         lastIndex++;
       }
       if (job.status === "done" || job.status === "failed") {
-        ws.send(JSON.stringify({ done: true, status: job.status }));
+        ws.send(JSON.stringify({ jobId: id, done: true, status: job.status }));
         clearInterval(interval);
       }
     }, 200);

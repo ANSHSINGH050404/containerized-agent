@@ -3,6 +3,9 @@
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/dockerode": "^4.0.1",
@@ -15,6 +18,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@types/cors": "^2.8.19",
+    "cors": "^2.8.6",
     "dockerode": "^4.0.10",
     "express": "^5.2.1",
     "uuid": "^13.0.0",

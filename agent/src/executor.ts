@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import * as fs from "fs";
-import { Step } from "./planner.ts";
+import type { Step } from "./planner.ts";
 
 export class Executor {
   async execute(steps: Step[]) {

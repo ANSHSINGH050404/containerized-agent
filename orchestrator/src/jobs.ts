@@ -12,6 +12,10 @@ export function getJob(id: string) {
   return jobs.get(id);
 }
 
+export function getAllJobs() {
+  return Array.from(jobs.values());
+}
+
 export function updateJobStatus(id: string, status: Job["status"]) {
   const job = jobs.get(id);
   if (job) job.status = status;

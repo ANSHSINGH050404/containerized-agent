@@ -1,12 +1,19 @@
 import express from "express";
 import { createJob } from "./docker.ts";
-import { getJob } from "./jobs.ts";
+import { getJob, getAllJobs } from "./jobs.ts";
 import { WebSocketServer } from "ws";
 import { setupStreaming } from "./stream.ts";
 import http from "http";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
 app.use(express.json());
+
+// GET /jobs — list all jobs
+app.get("/jobs", (req, res) => {
+  res.json(getAllJobs());
+});
 
 // POST /jobs — submit a prompt
 app.post("/jobs", async (req, res) => {

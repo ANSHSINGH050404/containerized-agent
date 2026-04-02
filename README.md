@@ -75,4 +75,25 @@ Or connect via WebSocket to `ws://localhost:3000/stream?jobId=<jobId>` for real-
 
 -   `agent/`: Agent logic and Docker environment.
 -   `orchestrator/`: Job management and Docker control.
+-   `frontend/`: React-based dashboard for job management.
 -   `docker-compose.yml`: Local setup.
+
+## Running the Dashboard
+
+To start the user interface:
+
+1.  Navigate to the `frontend` directory:
+    ```bash
+    cd frontend
+    ```
+2.  Install dependencies (if not already done):
+    ```bash
+    bun install
+    ```
+3.  Start the development server:
+    ```bash
+    bun dev
+    ```
+4.  Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+The dashboard allows you to submit new prompts, view the real-time VNC viewport of the agent, and stream logs.
