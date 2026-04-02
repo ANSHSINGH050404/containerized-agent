@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Terminal, Play, ExternalLink, Activity, CheckCircle, XCircle } from "lucide-react";
-import useWebSocket from "react-use-websocket";
 
 interface Job {
   id: string;
@@ -57,18 +56,27 @@ export default function App() {
         novncPort: 0
       }]);
       refreshJobs();
-    } catch (err) {
+    } catch {
       alert("Failed to start job");
     } finally {
       setLoading(false);
     }
   };
 
-  // Log streaming via WebSocket
-  const { lastMessage } = useWebSocket(
-    activeJobId ? `ws://localhost:3000/stream?jobId=${activeJobId}` : null,
-    { shouldReconnect: () => true }
-  );
+  // Log streaming via WebSocket (Native implementation to bypass library issues)
+  const [lastMessage, setLastMessage] = useState<any>(null);
+  useEffect(() => {
+    const url = activeJobId ? `ws://localhost:3000/stream?jobId=${activeJobId}` : null;
+    if (!url) {
+      setLastMessage(null);
+      return;
+    }
+    const ws = new WebSocket(url);
+    ws.onmessage = (e) => setLastMessage(e);
+    ws.onclose = () => console.log("WebSocket closed");
+    ws.onerror = (err) => console.error("WebSocket error", err);
+    return () => ws.close();
+  }, [activeJobId]);
 
   useEffect(() => {
     if (lastMessage !== null) {
@@ -81,7 +89,7 @@ export default function App() {
             )
           );
         }
-      } catch (e) {
+      } catch {
         // Skip non-JSON messages
       }
     }
@@ -200,7 +208,7 @@ export default function App() {
                     Logs
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 font-mono text-[13px] leading-relaxed">
-                    {activeJob.logs.map((log, i) => (
+                    {activeJob.logs.map((log: string, i: number) => (
                       <div key={i} className="mb-1">
                         <span className="text-slate-600 mr-2">[{i + 1}]</span>
                         <span dangerouslySetInnerHTML={{ __html: formatLog(log) }} />
@@ -237,9 +245,9 @@ function StatusBadge({ status }: { status: Job["status"] }) {
 function formatLog(log: string) {
   if (typeof log !== 'string') return '';
   return log
-    .replace(/\x1b\[31m/g, '<span style="color: #fb7185">')
-    .replace(/\x1b\[32m/g, '<span style="color: #34d399">')
-    .replace(/\x1b\[36m/g, '<span style="color: #22d3ee">')
-    .replace(/\x1b\[34m/g, '<span style="color: #60a5fa">')
-    .replace(/\x1b\[0m/g, "</span>");
+    .replace(/\u001b\[31m/g, '<span style="color: #fb7185">')
+    .replace(/\u001b\[32m/g, '<span style="color: #34d399">')
+    .replace(/\u001b\[36m/g, '<span style="color: #22d3ee">')
+    .replace(/\u001b\[34m/g, '<span style="color: #60a5fa">')
+    .replace(/\u001b\[0m/g, "</span>");
 }

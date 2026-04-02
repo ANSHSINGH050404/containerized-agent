@@ -1,8 +1,13 @@
 import Docker from "dockerode";
 import { v4 as uuid } from "uuid";
-import { Job, jobs } from "./jobs.ts";
+import type { Job } from "./jobs.ts";
+import { jobs } from "./jobs.ts";
 
-const docker = new Docker();
+const isWin = process.platform === "win32";
+// Try npipe for Windows, default for others
+const docker = isWin 
+  ? new Docker({ socketPath: "//./pipe/docker_engine" }) 
+  : new Docker({ socketPath: "/var/run/docker.sock" });
 
 export async function createJob(prompt: string): Promise<Job> {
   const id = uuid();
@@ -11,7 +16,8 @@ export async function createJob(prompt: string): Promise<Job> {
   const job: Job = { id, status: "pending", prompt, logs: [], novncPort };
   jobs.set(id, job);
 
-  const container = await docker.createContainer({
+  try {
+    const container = await docker.createContainer({
     Image: "agent:latest",
     Env: [
       `AGENT_PROMPT=${prompt}`,
@@ -41,12 +47,20 @@ export async function createJob(prompt: string): Promise<Job> {
     { write: (chunk: Buffer) => job.logs.push(chunk.toString()) }
   );
 
-  container.wait().then(() => {
-    job.status = "done";
-    container.remove();
-  }).catch(() => {
-    job.status = "failed";
-  });
+    container.wait().then((res: any) => {
+      if (res && res.StatusCode !== 0) {
+        job.status = "failed";
+      } else {
+        job.status = "done";
+      }
+      container.remove();
+    }).catch(() => {
+      job.status = "failed";
+    });
 
-  return job;
+    return job;
+  } catch (err) {
+    job.status = "failed";
+    throw err;
+  }
 }
