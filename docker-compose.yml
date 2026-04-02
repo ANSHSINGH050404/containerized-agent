@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  orchestrator:
+    build: ./orchestrator
+    ports:
+      - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+
+  # The agent image is built separately and spawned dynamically
+  # docker build -t agent:latest ./agent
