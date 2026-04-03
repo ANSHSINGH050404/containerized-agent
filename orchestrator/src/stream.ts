@@ -10,6 +10,7 @@ export function setupStreaming(wss: WebSocketServer) {
 
     let lastIndex = 0;
     const interval = setInterval(() => {
+      // Primary drain: send any new log lines
       while (lastIndex < job.logs.length) {
         const line = job.logs[lastIndex];
         if (line) {
@@ -17,7 +18,16 @@ export function setupStreaming(wss: WebSocketServer) {
         }
         lastIndex++;
       }
+
       if (job.status === "done" || job.status === "failed") {
+        // Bug #6 Fix: re-drain any logs appended between the last tick and container exit
+        while (lastIndex < job.logs.length) {
+          const line = job.logs[lastIndex];
+          if (line) {
+            ws.send(JSON.stringify({ jobId: id, log: line }));
+          }
+          lastIndex++;
+        }
         ws.send(JSON.stringify({ jobId: id, done: true, status: job.status }));
         clearInterval(interval);
       }
